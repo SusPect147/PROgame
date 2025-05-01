@@ -24,7 +24,7 @@
             /* Website theme: Black with semi-transparent gradient */
             --bg-color: #000000;
             --bg-gradient: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2), transparent 70%);
-            --highlight-gradient: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2), transparent 70%);
+            --highlight-color: #FFFFFF;
             --text-color: #ffffff;
             --footer-bg: rgba(30, 30, 30, 0.85);
             --counter-bg: rgba(30, 30, 30, 0.85);
@@ -252,12 +252,12 @@
             height: 64px;
             object-fit: contain;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: #2E2E2E;
             padding: 12px;
         }
 
         .menu-item.highlighted img {
-            background-image: var(--highlight-gradient);
+            background: var(--highlight-color);
         }
 
         .menu-item span {
@@ -468,37 +468,45 @@
         positionCoinCounter();
         window.addEventListener('resize', positionCoinCounter);
 
-        // Update character skin and background gradient based on coins
+        // Update character skin and highlight color based on coins
         function updateCharacterSkin() {
             let newSrc = 'https://em-content.zobj.net/source/telegram/386/video-game_1f3ae.webp';
             let newGradient = 'radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.2), transparent 70%)';
+            let highlightColor = '#FFFFFF';
 
             if (coins >= 1300) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/robot_1f916.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(70, 130, 180, 0.2), rgba(169, 169, 169, 0.2), transparent 70%)';
+                highlightColor = '#4682B4';
             } else if (coins >= 1100) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/alien_1f47d.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(50, 205, 50, 0.2), transparent 70%)';
+                highlightColor = '#32CD32';
             } else if (coins >= 900) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/moai_1f5ff.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(128, 128, 128, 0.2), transparent 70%)';
+                highlightColor = '#808080';
             } else if (coins >= 700) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/rocket_1f680.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(255, 140, 0, 0.2), rgba(30, 144, 255, 0.2), transparent 70%)';
+                highlightColor = '#FF8C00';
             } else if (coins >= 500) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/airplane_2708-fe0f.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(135, 206, 235, 0.2), rgba(255, 255, 255, 0.1), transparent 70%)';
+                highlightColor = '#87CEEB';
             } else if (coins >= 300) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/locomotive_1f682.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(255, 165, 0, 0.2), transparent 70%)';
+                highlightColor = '#FFA500';
             } else if (coins >= 100) {
                 newSrc = 'https://em-content.zobj.net/source/telegram/386/automobile_1f697.webp';
                 newGradient = 'radial-gradient(circle at 50% 50%, rgba(255, 99, 71, 0.2), transparent 70%)';
+                highlightColor = '#FF6347';
             }
 
             character.src = newSrc;
             document.documentElement.style.setProperty('--bg-gradient', newGradient);
-            document.documentElement.style.setProperty('--highlight-gradient', newGradient);
+            document.documentElement.style.setProperty('--highlight-color', highlightColor);
         }
         updateCharacterSkin(); // Initial call
 
