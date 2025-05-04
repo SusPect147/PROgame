@@ -653,7 +653,8 @@
                 this.glowColor = '';
                 this.questIndex = 0; // 0: collect_coins, 1: tap_character, 2: completed
                 this.tapCount = 0;
-                this.isTransitionOverlayActive = false; // New flag to track transition overlay
+                this.tapRequirement = 50; // Initial tap requirement for first world
+                this.isTransitionOverlayActive = false;
             }
 
             /** @returns {number} Current coin count */
@@ -1143,9 +1144,10 @@
             showCurrentQuest() {
                 const currentSkin = SKINS[this.lastWorldIndex] || SKINS[0];
                 const nextSkin = SKINS[this.lastWorldIndex + 1] || null;
+                const coinTarget = nextSkin ? nextSkin.coins : 1500; // Fallback for final world
                 const questText = this.state.questIndex === 0 
-                    ? `Collect ${nextSkin ? nextSkin.coins : 1300} diamonds`
-                    : `Tap the character 50 times`;
+                    ? `Collect ${coinTarget} diamonds`
+                    : `Tap the character ${this.state.tapRequirement} times`;
                 const overlay = document.createElement('div');
                 overlay.className = 'quest-overlay hidden';
                 const message = document.createElement('div');
@@ -1173,7 +1175,6 @@
              * @param {Object|null} nextSkin - Next skin
              */
             showTransitionOverlay(currentSkin, nextSkin) {
-                // Prevent multiple transition overlays
                 if (this.state.isTransitionOverlayActive) return;
                 this.state.isTransitionOverlayActive = true;
                 this.state.isOverlayActive = true;
@@ -1220,13 +1221,12 @@
                         overlay.remove();
                         this.state.isTransitionOverlayActive = false;
                         this.state.isOverlayActive = false;
-                        this.state.canInteract = true; // Allow interaction
+                        this.state.canInteract = true;
                         this.state.isWorldNameGlowing = true;
                         this.state.glowColor = nextSkin ? nextSkin.color : currentSkin.color;
                         this.ui.elements.playerStats.classList.add('glowing');
                         this.ui.elements.playerStats.style.textShadow = `0 0 10px ${this.state.glowColor}`;
                         this.ui.elements.progressFill.classList.add('dark');
-                        // Reset quest to allow restarting the cycle
                         this.state.questIndex = 0;
                         this.state.tapCount = 0;
                         if (this.glowListener) {
@@ -1281,11 +1281,19 @@
                 prompt.className = 'world-prompt hidden';
                 prompt.textContent = 'Press to remove this';
 
+                // Calculate next quest details
+                let nextQuest = '';
+                const newTapRequirement = nextSkin ? this.state.tapRequirement * 2 : this.state.tapRequirement;
                 if (nextSkin) {
-                    message.textContent = `Congratulations! You've completed ${currentSkin.worldName}! Next: ${nextSkin.worldName}`;
+                    message.textContent = `Congratulations! You've completed ${currentSkin.worldName}! Now entering: ${nextSkin.worldName}`;
+                    nextQuest = `Next quest: Collect ${nextSkin.coins} diamonds`;
                 } else {
                     message.textContent = `Congratulations! You've completed ${currentSkin.worldName}! You're a master of all worlds!`;
+                    nextQuest = `Next quest: Collect 1500 diamonds to continue mastering this world`;
                 }
+
+                // Append next quest to message
+                message.textContent += `\n${nextQuest}`;
 
                 overlay.appendChild(message);
                 overlay.appendChild(prompt);
@@ -1317,6 +1325,7 @@
                         this.lastWorldIndex = SKINS.indexOf(nextSkin || currentSkin);
                         this.state.questIndex = 0;
                         this.state.tapCount = 0;
+                        this.state.tapRequirement = newTapRequirement; // Update tap requirement for new world
                         const targetSkin = SKINS[this.lastWorldIndex] || SKINS[0];
                         this.ui.queueUpdate('characterSrc', targetSkin.src);
                         this.ui.queueUpdate('gradient', targetSkin.gradient);
@@ -1338,11 +1347,10 @@
                 const currentSkin = SKINS[this.lastWorldIndex] || SKINS[0];
                 const nextSkin = SKINS[this.lastWorldIndex + 1] || null;
 
-                // Only show transition overlay if no transition overlay is active
                 if (this.state.questIndex === 2 && !this.state.isWorldNameGlowing && !this.state.isTransitionOverlayActive) {
                     this.state.canInteract = false;
                     this.showTransitionOverlay(currentSkin, nextSkin);
-                    return; // Prevent further updates until transition is resolved
+                    return;
                 }
 
                 if (!this.state.isWorldNameGlowing) {
@@ -1365,13 +1373,22 @@
                         const worldThreshold = nextSkin.coins;
                         progress = ((coins - baseThreshold) / (worldThreshold - baseThreshold)) * 100;
                     } else if (this.state.questIndex === 1) {
-                        progress = (this.state.tapCount / 50) * 100;
+                        progress = (this.state.tapCount / this.state.tapRequirement) * 100;
                     } else {
                         progress = 100;
                     }
                     progress = Math.min(progress, 100);
                 } else {
-                    progress = 100;
+                    const finalCoinTarget = 1500; // Fallback for final world
+                    if (this.state.questIndex === 0) {
+                        const baseThreshold = currentSkin.coins;
+                        progress = ((coins - baseThreshold) / (finalCoinTarget - baseThreshold)) * 100;
+                    } else if (this.state.questIndex === 1) {
+                        progress = (this.state.tapCount / this.state.tapRequirement) * 100;
+                    } else {
+                        progress = 100;
+                    }
+                    progress = Math.min(progress, 100);
                 }
                 this.ui.queueUpdate('progressPercent', progress);
 
@@ -1410,7 +1427,7 @@
 
                 const currentSkin = SKINS[this.lastWorldIndex] || SKINS[0];
                 const nextSkin = SKINS[this.lastWorldIndex + 1] || null;
-                const coinLimit = nextSkin ? nextSkin.coins : Infinity;
+                const coinLimit = nextSkin ? nextSkin.coins : 1500; // Fallback for final world
 
                 if (this.state.questIndex === 0) {
                     if (this.state.getCoins() < coinLimit) {
@@ -1419,7 +1436,7 @@
                         this.ui.queueUpdate('coins', this.state.getCoins());
                         this.ui.queueUpdate('totalCoins', this.state.getCoins());
                         if (this.state.getCoins() >= coinLimit) {
-                            this.showQuestOverlay('Great! Now tap the character 50 times', 'Start', () => {
+                            this.showQuestOverlay(`Great! Now tap the character ${this.state.tapRequirement} times`, 'Start', () => {
                                 this.state.questIndex = 1;
                                 this.state.tapCount = 0;
                             });
@@ -1427,7 +1444,7 @@
                     }
                 } else if (this.state.questIndex === 1) {
                     this.state.tapCount += 1;
-                    if (this.state.tapCount >= 50) {
+                    if (this.state.tapCount >= this.state.tapRequirement) {
                         this.state.questIndex = 2;
                         this.updateAppearance();
                     }
